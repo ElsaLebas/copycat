@@ -562,15 +562,22 @@ var _autocompleteJs = require("@algolia/autocomplete-js");
 var _lite = require("algoliasearch/lite");
 var _liteDefault = parcelHelpers.interopDefault(_lite);
 var _autocompletePluginQuerySuggestions = require("@algolia/autocomplete-plugin-query-suggestions");
+var _autocompletePluginRecentSearches = require("@algolia/autocomplete-plugin-recent-searches");
 const searchClient = (0, _liteDefault.default)("ZH6901PX1J", "960f9fcf91cb1d368a9ab871cc9393a0");
 const querySuggestionsPlugin = (0, _autocompletePluginQuerySuggestions.createQuerySuggestionsPlugin)({
     searchClient,
     indexName: "sandbox_index_query_suggestions"
 });
+const recentSearchesPlugin = (0, _autocompletePluginRecentSearches.createLocalStorageRecentSearchesPlugin)({
+    key: "navbar",
+    limit: 3
+});
 (0, _autocompleteJs.autocomplete)({
     container: "#autocomplete",
+    openOnFocus: true,
     plugins: [
-        querySuggestionsPlugin
+        querySuggestionsPlugin,
+        recentSearchesPlugin
     ],
     placeholder: "Your search here...",
     // openOnFocus: true,
@@ -602,7 +609,7 @@ const querySuggestionsPlugin = (0, _autocompletePluginQuerySuggestions.createQue
     }
 });
 
-},{"@algolia/autocomplete-js":"3Syxs","algoliasearch/lite":"ehDkI","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@algolia/autocomplete-plugin-query-suggestions":"kDyli"}],"3Syxs":[function(require,module,exports) {
+},{"@algolia/autocomplete-js":"3Syxs","algoliasearch/lite":"ehDkI","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@algolia/autocomplete-plugin-query-suggestions":"kDyli","@algolia/autocomplete-plugin-recent-searches":"lFtzN"}],"3Syxs":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _autocomplete = require("./autocomplete");
@@ -6708,6 +6715,515 @@ function getTemplates(_ref) {
     };
 }
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["lKzq4","bNKaB"], "bNKaB", "parcelRequire94c2")
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"lFtzN":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _addHighlightedAttribute = require("./addHighlightedAttribute");
+parcelHelpers.exportAll(_addHighlightedAttribute, exports);
+var _createLocalStorageRecentSearchesPlugin = require("./createLocalStorageRecentSearchesPlugin");
+parcelHelpers.exportAll(_createLocalStorageRecentSearchesPlugin, exports);
+var _createRecentSearchesPlugin = require("./createRecentSearchesPlugin");
+parcelHelpers.exportAll(_createRecentSearchesPlugin, exports);
+var _getTemplates = require("./getTemplates");
+parcelHelpers.exportAll(_getTemplates, exports);
+var _search = require("./search");
+parcelHelpers.exportAll(_search, exports);
+
+},{"./addHighlightedAttribute":"iMgYs","./createLocalStorageRecentSearchesPlugin":"gT3kG","./createRecentSearchesPlugin":"2L1S7","./getTemplates":"8XaSk","./search":"CzUZD","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iMgYs":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "addHighlightedAttribute", ()=>addHighlightedAttribute);
+function ownKeys(object, enumerableOnly) {
+    var keys = Object.keys(object);
+    if (Object.getOwnPropertySymbols) {
+        var symbols = Object.getOwnPropertySymbols(object);
+        enumerableOnly && (symbols = symbols.filter(function(sym) {
+            return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+        })), keys.push.apply(keys, symbols);
+    }
+    return keys;
+}
+function _objectSpread(target) {
+    for(var i = 1; i < arguments.length; i++){
+        var source = null != arguments[i] ? arguments[i] : {};
+        i % 2 ? ownKeys(Object(source), !0).forEach(function(key) {
+            _defineProperty(target, key, source[key]);
+        }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function(key) {
+            Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+        });
+    }
+    return target;
+}
+function _defineProperty(obj, key, value) {
+    if (key in obj) Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+    });
+    else obj[key] = value;
+    return obj;
+}
+function addHighlightedAttribute(_ref) {
+    var item = _ref.item, query = _ref.query;
+    return _objectSpread(_objectSpread({}, item), {}, {
+        _highlightResult: {
+            label: {
+                value: query ? item.label.replace(new RegExp(query.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"), "gi"), function(match) {
+                    return "__aa-highlight__".concat(match, "__/aa-highlight__");
+                }) : item.label
+            }
+        }
+    });
+}
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gT3kG":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "createLocalStorageRecentSearchesPlugin", ()=>createLocalStorageRecentSearchesPlugin);
+var _constants = require("./constants");
+var _createLocalStorage = require("./createLocalStorage");
+var _createRecentSearchesPlugin = require("./createRecentSearchesPlugin");
+var _search = require("./search");
+function ownKeys(object, enumerableOnly) {
+    var keys = Object.keys(object);
+    if (Object.getOwnPropertySymbols) {
+        var symbols = Object.getOwnPropertySymbols(object);
+        enumerableOnly && (symbols = symbols.filter(function(sym) {
+            return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+        })), keys.push.apply(keys, symbols);
+    }
+    return keys;
+}
+function _objectSpread(target) {
+    for(var i = 1; i < arguments.length; i++){
+        var source = null != arguments[i] ? arguments[i] : {};
+        i % 2 ? ownKeys(Object(source), !0).forEach(function(key) {
+            _defineProperty(target, key, source[key]);
+        }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function(key) {
+            Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+        });
+    }
+    return target;
+}
+function _defineProperty(obj, key, value) {
+    if (key in obj) Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+    });
+    else obj[key] = value;
+    return obj;
+}
+function createLocalStorageRecentSearchesPlugin(options) {
+    var _getOptions = getOptions(options), key = _getOptions.key, limit = _getOptions.limit, transformSource = _getOptions.transformSource, search = _getOptions.search, subscribe = _getOptions.subscribe;
+    var storage = (0, _createLocalStorage.createLocalStorage)({
+        key: [
+            (0, _constants.LOCAL_STORAGE_KEY),
+            key
+        ].join(":"),
+        limit: limit,
+        search: search
+    });
+    var recentSearchesPlugin = (0, _createRecentSearchesPlugin.createRecentSearchesPlugin)({
+        transformSource: transformSource,
+        storage: storage,
+        subscribe: subscribe
+    });
+    return _objectSpread(_objectSpread({}, recentSearchesPlugin), {}, {
+        name: "aa.localStorageRecentSearchesPlugin",
+        __autocomplete_pluginOptions: options
+    });
+}
+function getOptions(options) {
+    return _objectSpread({
+        limit: 5,
+        search: (0, _search.search),
+        transformSource: function transformSource(_ref) {
+            var source = _ref.source;
+            return source;
+        }
+    }, options);
+}
+
+},{"./constants":"7gwd9","./createLocalStorage":"iPAw2","./createRecentSearchesPlugin":"2L1S7","./search":"CzUZD","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"7gwd9":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "LOCAL_STORAGE_KEY", ()=>LOCAL_STORAGE_KEY);
+parcelHelpers.export(exports, "LOCAL_STORAGE_KEY_TEST", ()=>LOCAL_STORAGE_KEY_TEST);
+var LOCAL_STORAGE_KEY = "AUTOCOMPLETE_RECENT_SEARCHES";
+var LOCAL_STORAGE_KEY_TEST = "__AUTOCOMPLETE_RECENT_SEARCHES_PLUGIN_TEST_KEY__";
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"iPAw2":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "createLocalStorage", ()=>createLocalStorage);
+var _getLocalStorage = require("./getLocalStorage");
+function _toConsumableArray(arr) {
+    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
+}
+function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+function _unsupportedIterableToArray(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(o);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
+function _iterableToArray(iter) {
+    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+}
+function _arrayWithoutHoles(arr) {
+    if (Array.isArray(arr)) return _arrayLikeToArray(arr);
+}
+function _arrayLikeToArray(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+    for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
+    return arr2;
+}
+function createLocalStorage(_ref) {
+    var key = _ref.key, limit = _ref.limit, search = _ref.search;
+    var storage = (0, _getLocalStorage.getLocalStorage)({
+        key: key
+    });
+    return {
+        onAdd: function onAdd(item) {
+            storage.setItem([
+                item
+            ].concat(_toConsumableArray(storage.getItem())));
+        },
+        onRemove: function onRemove(id) {
+            storage.setItem(storage.getItem().filter(function(x) {
+                return x.id !== id;
+            }));
+        },
+        getAll: function getAll() {
+            var query = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
+            return search({
+                query: query,
+                items: storage.getItem(),
+                limit: limit
+            }).slice(0, limit);
+        }
+    };
+}
+
+},{"./getLocalStorage":"fSk8j","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"fSk8j":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "getLocalStorage", ()=>getLocalStorage);
+var _constants = require("./constants");
+function isLocalStorageSupported() {
+    try {
+        localStorage.setItem((0, _constants.LOCAL_STORAGE_KEY_TEST), "");
+        localStorage.removeItem((0, _constants.LOCAL_STORAGE_KEY_TEST));
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+function getLocalStorage(_ref) {
+    var key = _ref.key;
+    if (!isLocalStorageSupported()) return {
+        setItem: function setItem() {},
+        getItem: function getItem() {
+            return [];
+        }
+    };
+    return {
+        setItem: function setItem(items) {
+            return window.localStorage.setItem(key, JSON.stringify(items));
+        },
+        getItem: function getItem() {
+            var items = window.localStorage.getItem(key);
+            return items ? JSON.parse(items) : [];
+        }
+    };
+}
+
+},{"./constants":"7gwd9","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"2L1S7":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "createRecentSearchesPlugin", ()=>createRecentSearchesPlugin);
+var _autocompleteShared = require("@algolia/autocomplete-shared");
+var _createStorageApi = require("./createStorageApi");
+var _getTemplates = require("./getTemplates");
+function _toConsumableArray(arr) {
+    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
+}
+function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+function _unsupportedIterableToArray(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(o);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
+function _iterableToArray(iter) {
+    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+}
+function _arrayWithoutHoles(arr) {
+    if (Array.isArray(arr)) return _arrayLikeToArray(arr);
+}
+function _arrayLikeToArray(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+    for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
+    return arr2;
+}
+function ownKeys(object, enumerableOnly) {
+    var keys = Object.keys(object);
+    if (Object.getOwnPropertySymbols) {
+        var symbols = Object.getOwnPropertySymbols(object);
+        enumerableOnly && (symbols = symbols.filter(function(sym) {
+            return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+        })), keys.push.apply(keys, symbols);
+    }
+    return keys;
+}
+function _objectSpread(target) {
+    for(var i = 1; i < arguments.length; i++){
+        var source = null != arguments[i] ? arguments[i] : {};
+        i % 2 ? ownKeys(Object(source), !0).forEach(function(key) {
+            _defineProperty(target, key, source[key]);
+        }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function(key) {
+            Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+        });
+    }
+    return target;
+}
+function _defineProperty(obj, key, value) {
+    if (key in obj) Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+    });
+    else obj[key] = value;
+    return obj;
+}
+function getDefaultSubcribe(store) {
+    return function subscribe(_ref) {
+        var onSelect = _ref.onSelect;
+        onSelect(function(_ref2) {
+            var item = _ref2.item, state = _ref2.state, source = _ref2.source;
+            var inputValue = source.getItemInputValue({
+                item: item,
+                state: state
+            });
+            if (source.sourceId === "querySuggestionsPlugin" && inputValue) {
+                var recentItem = {
+                    id: inputValue,
+                    label: inputValue,
+                    category: item.__autocomplete_qsCategory
+                };
+                store.addItem(recentItem);
+            }
+        });
+    };
+}
+function createRecentSearchesPlugin(options) {
+    var _getOptions = getOptions(options), storage = _getOptions.storage, transformSource = _getOptions.transformSource, subscribe = _getOptions.subscribe;
+    var store = (0, _createStorageApi.createStorageApi)(storage);
+    var lastItemsRef = (0, _autocompleteShared.createRef)([]);
+    return {
+        name: "aa.recentSearchesPlugin",
+        subscribe: subscribe !== null && subscribe !== void 0 ? subscribe : getDefaultSubcribe(store),
+        onSubmit: function onSubmit(_ref3) {
+            var state = _ref3.state;
+            var query = state.query;
+            if (query) {
+                var recentItem = {
+                    id: query,
+                    label: query
+                };
+                store.addItem(recentItem);
+            }
+        },
+        getSources: function getSources(_ref4) {
+            var query = _ref4.query, setQuery = _ref4.setQuery, refresh = _ref4.refresh, state = _ref4.state;
+            lastItemsRef.current = store.getAll(query);
+            function onRemove(id) {
+                store.removeItem(id);
+                refresh();
+            }
+            function onTapAhead(item) {
+                setQuery(item.label);
+                refresh();
+            }
+            return Promise.resolve(lastItemsRef.current).then(function(items) {
+                if (items.length === 0) return [];
+                return [
+                    transformSource({
+                        source: {
+                            sourceId: "recentSearchesPlugin",
+                            getItemInputValue: function getItemInputValue(_ref5) {
+                                var item = _ref5.item;
+                                return item.label;
+                            },
+                            getItems: function getItems() {
+                                return items;
+                            },
+                            templates: (0, _getTemplates.getTemplates)({
+                                onRemove: onRemove,
+                                onTapAhead: onTapAhead
+                            })
+                        },
+                        onRemove: onRemove,
+                        onTapAhead: onTapAhead,
+                        state: state
+                    })
+                ];
+            });
+        },
+        data: _objectSpread(_objectSpread({}, store), {}, {
+            // @ts-ignore SearchOptions `facetFilters` is ReadonlyArray
+            getAlgoliaSearchParams: function getAlgoliaSearchParams() {
+                var _params$facetFilters, _params$hitsPerPage;
+                var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+                // If the items returned by `store.getAll` are contained in a Promise,
+                // we cannot provide the search params in time when this function is called
+                // because we need to resolve the promise before getting the value.
+                if (!Array.isArray(lastItemsRef.current)) {
+                    (0, _autocompleteShared.warn)(false, "The `getAlgoliaSearchParams` function is not supported with storages that return promises in `getAll`.");
+                    return params;
+                }
+                return _objectSpread(_objectSpread({}, params), {}, {
+                    facetFilters: [].concat(_toConsumableArray((_params$facetFilters = params.facetFilters) !== null && _params$facetFilters !== void 0 ? _params$facetFilters : []), _toConsumableArray(lastItemsRef.current.map(function(item) {
+                        return [
+                            "objectID:-".concat(item.label)
+                        ];
+                    }))),
+                    hitsPerPage: Math.max(1, ((_params$hitsPerPage = params.hitsPerPage) !== null && _params$hitsPerPage !== void 0 ? _params$hitsPerPage : 10) - lastItemsRef.current.length)
+                });
+            }
+        }),
+        __autocomplete_pluginOptions: options
+    };
+}
+function getOptions(options) {
+    return _objectSpread({
+        transformSource: function transformSource(_ref6) {
+            var source = _ref6.source;
+            return source;
+        }
+    }, options);
+}
+
+},{"@algolia/autocomplete-shared":"59T59","./createStorageApi":"gg2wy","./getTemplates":"8XaSk","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gg2wy":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "createStorageApi", ()=>createStorageApi);
+function createStorageApi(storage) {
+    return {
+        addItem: function addItem(item) {
+            storage.onRemove(item.id);
+            storage.onAdd(item);
+        },
+        removeItem: function removeItem(id) {
+            storage.onRemove(id);
+        },
+        getAll: function getAll(query) {
+            return storage.getAll(query);
+        }
+    };
+}
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"8XaSk":[function(require,module,exports) {
+/** @jsxRuntime classic */ /** @jsx createElement */ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "getTemplates", ()=>getTemplates);
+function getTemplates(_ref) {
+    var onRemove = _ref.onRemove, onTapAhead = _ref.onTapAhead;
+    return {
+        item: function item(_ref2) {
+            var item = _ref2.item, createElement = _ref2.createElement, components = _ref2.components;
+            return createElement("div", {
+                className: "aa-ItemWrapper"
+            }, createElement("div", {
+                className: "aa-ItemContent"
+            }, createElement("div", {
+                className: "aa-ItemIcon aa-ItemIcon--noBorder"
+            }, createElement("svg", {
+                viewBox: "0 0 24 24",
+                fill: "currentColor"
+            }, createElement("path", {
+                d: "M12.516 6.984v5.25l4.5 2.672-0.75 1.266-5.25-3.188v-6h1.5zM12 20.016q3.281 0 5.648-2.367t2.367-5.648-2.367-5.648-5.648-2.367-5.648 2.367-2.367 5.648 2.367 5.648 5.648 2.367zM12 2.016q4.125 0 7.055 2.93t2.93 7.055-2.93 7.055-7.055 2.93-7.055-2.93-2.93-7.055 2.93-7.055 7.055-2.93z"
+            }))), createElement("div", {
+                className: "aa-ItemContentBody"
+            }, createElement("div", {
+                className: "aa-ItemContentTitle"
+            }, createElement(components.ReverseHighlight, {
+                hit: item,
+                attribute: "label"
+            }), item.category && createElement("span", {
+                className: "aa-ItemContentSubtitle aa-ItemContentSubtitle--inline"
+            }, createElement("span", {
+                className: "aa-ItemContentSubtitleIcon"
+            }), " in", " ", createElement("span", {
+                className: "aa-ItemContentSubtitleCategory"
+            }, item.category))))), createElement("div", {
+                className: "aa-ItemActions"
+            }, createElement("button", {
+                className: "aa-ItemActionButton",
+                title: "Remove this search",
+                onClick: function onClick(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onRemove(item.id);
+                }
+            }, createElement("svg", {
+                viewBox: "0 0 24 24",
+                fill: "currentColor"
+            }, createElement("path", {
+                d: "M18 7v13c0 0.276-0.111 0.525-0.293 0.707s-0.431 0.293-0.707 0.293h-10c-0.276 0-0.525-0.111-0.707-0.293s-0.293-0.431-0.293-0.707v-13zM17 5v-1c0-0.828-0.337-1.58-0.879-2.121s-1.293-0.879-2.121-0.879h-4c-0.828 0-1.58 0.337-2.121 0.879s-0.879 1.293-0.879 2.121v1h-4c-0.552 0-1 0.448-1 1s0.448 1 1 1h1v13c0 0.828 0.337 1.58 0.879 2.121s1.293 0.879 2.121 0.879h10c0.828 0 1.58-0.337 2.121-0.879s0.879-1.293 0.879-2.121v-13h1c0.552 0 1-0.448 1-1s-0.448-1-1-1zM9 5v-1c0-0.276 0.111-0.525 0.293-0.707s0.431-0.293 0.707-0.293h4c0.276 0 0.525 0.111 0.707 0.293s0.293 0.431 0.293 0.707v1zM9 11v6c0 0.552 0.448 1 1 1s1-0.448 1-1v-6c0-0.552-0.448-1-1-1s-1 0.448-1 1zM13 11v6c0 0.552 0.448 1 1 1s1-0.448 1-1v-6c0-0.552-0.448-1-1-1s-1 0.448-1 1z"
+            }))), createElement("button", {
+                className: "aa-ItemActionButton",
+                title: 'Fill query with "'.concat(item.label, '"'),
+                onClick: function onClick(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onTapAhead(item);
+                }
+            }, createElement("svg", {
+                viewBox: "0 0 24 24",
+                fill: "currentColor"
+            }, createElement("path", {
+                d: "M8 17v-7.586l8.293 8.293c0.391 0.391 1.024 0.391 1.414 0s0.391-1.024 0-1.414l-8.293-8.293h7.586c0.552 0 1-0.448 1-1s-0.448-1-1-1h-10c-0.552 0-1 0.448-1 1v10c0 0.552 0.448 1 1 1s1-0.448 1-1z"
+            })))));
+        }
+    };
+}
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"CzUZD":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "search", ()=>search);
+var _addHighlightedAttribute = require("./addHighlightedAttribute");
+function search(_ref) {
+    var query = _ref.query, items = _ref.items, limit = _ref.limit;
+    if (!query) return items.slice(0, limit).map(function(item) {
+        return (0, _addHighlightedAttribute.addHighlightedAttribute)({
+            item: item,
+            query: query
+        });
+    });
+    return items.filter(function(item) {
+        return item.label.toLowerCase().includes(query.toLowerCase());
+    }).slice(0, limit).map(function(item) {
+        return (0, _addHighlightedAttribute.addHighlightedAttribute)({
+            item: item,
+            query: query
+        });
+    });
+}
+
+},{"./addHighlightedAttribute":"iMgYs","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["lKzq4","bNKaB"], "bNKaB", "parcelRequire94c2")
 
 //# sourceMappingURL=index.0641b553.js.map
