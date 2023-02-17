@@ -11,13 +11,19 @@ const searchClient = algoliasearch(
 const querySuggestionsPlugin = createQuerySuggestionsPlugin({
   searchClient,
   indexName: 'sandbox_index_query_suggestions',
+  getSearchParams({ state }) {
+    // return 10 results is user hasn't started typing anything yet
+    // and 5 if he has
+    return { hitsPerPage: state.query ? 5 : 10 }; 
+  },
 });
 
 autocomplete({
   container: "#autocomplete",
   plugins: [querySuggestionsPlugin],
   placeholder: "Your search here...",
-  // openOnFocus: true,
+  // openOnFocus : open the searchbox panel even when user hasn't started typing yet
+  openOnFocus: true,
   getSources() {
     return [
       {

@@ -565,7 +565,14 @@ var _autocompletePluginQuerySuggestions = require("@algolia/autocomplete-plugin-
 const searchClient = (0, _liteDefault.default)("ZH6901PX1J", "960f9fcf91cb1d368a9ab871cc9393a0");
 const querySuggestionsPlugin = (0, _autocompletePluginQuerySuggestions.createQuerySuggestionsPlugin)({
     searchClient,
-    indexName: "sandbox_index_query_suggestions"
+    indexName: "sandbox_index_query_suggestions",
+    getSearchParams ({ state  }) {
+        // return 10 results is user hasn't started typing anything yet
+        // and 5 if he has
+        return {
+            hitsPerPage: state.query ? 5 : 10
+        };
+    }
 });
 (0, _autocompleteJs.autocomplete)({
     container: "#autocomplete",
@@ -573,7 +580,8 @@ const querySuggestionsPlugin = (0, _autocompletePluginQuerySuggestions.createQue
         querySuggestionsPlugin
     ],
     placeholder: "Your search here...",
-    // openOnFocus: true,
+    // openOnFocus : open the searchbox panel even when user hasn't started typing yet
+    openOnFocus: true,
     getSources () {
         return [
             {
