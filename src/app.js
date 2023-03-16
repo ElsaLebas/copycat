@@ -7,7 +7,7 @@ import { createLocalStorageRecentSearchesPlugin } from '@algolia/autocomplete-pl
 
 const searchClient = algoliasearch(
   "ZH6901PX1J",
-  "960f9fcf91cb1d368a9ab871cc9393a0"
+  "d850a12faaa943ad0653aeffa19ad564"
 );
 
 const querySuggestionsPlugin = createQuerySuggestionsPlugin({
